@@ -29,7 +29,7 @@ st.markdown("""
         justify-content: center;
     }
     </style>
-    """, unsafe_allow_index=True)
+    """, unsafe_allow_html=True)
 
 # --- NAVEGACIÓN INFERIOR ---
 # Usamos Tabs para simular los módulos de IG
