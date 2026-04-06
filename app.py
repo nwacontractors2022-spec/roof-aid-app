@@ -4,11 +4,12 @@ import streamlit.components.v1 as components
 # 1. Configuración de página
 st.set_page_config(page_title="Roof-Aid Tech", layout="centered")
 
-# --- RUTAS DE ARCHIVOS (Ruta directa de GitHub) ---
+# --- RUTAS DE ARCHIVOS (Ruta directa a tu GitHub) ---
+# Al haber subido el archivo, esta URL es la que lo hará aparecer
 LOGO_URL = "https://raw.githubusercontent.com/nwacontractors2022-spec/roof-aid-app/main/Gemini_Generated_Image_i6ft8ji6ft8ji6ft.png"
 HOUSE_ICON_URL = "https://cdn-icons-png.flaticon.com/512/619/619153.png"
 
-# --- CSS GLOBAL (AZUL REY Y ESTILO IG) ---
+# --- CSS GLOBAL (AZUL REY Y ESTILO INSTAGRAM) ---
 st.markdown(f"""
     <style>
     /* Fondo Azul Rey en toda la App */
@@ -30,7 +31,7 @@ st.markdown(f"""
     }}
     
     .main-logo {{
-        height: 75px; /* Tamaño del logo */
+        height: 85px; /* Logo más predominante */
         width: auto;
     }}
 
@@ -43,7 +44,7 @@ st.markdown(f"""
         z-index: 1000;
         justify-content: center;
         border-top: 1px solid rgba(255,255,255,0.1);
-        padding-bottom: 5px;
+        padding-bottom: 10px;
     }}
     
     button[data-baseweb="tab"] p {{
@@ -52,10 +53,15 @@ st.markdown(f"""
         font-size: 14px;
     }}
 
-    /* Ocultar elementos innecesarios de Streamlit */
+    /* Ocultar elementos de Streamlit para limpieza total */
     #MainMenu {{visibility: hidden;}}
     footer {{visibility: hidden;}}
     header {{visibility: hidden;}}
+    
+    /* Ajuste de márgenes de bloques */
+    .block-container {{
+        padding-top: 1rem;
+    }}
     </style>
     """, unsafe_allow_html=True)
 
@@ -68,7 +74,7 @@ tab_home, tab_messages, tab_profile = st.tabs(["🏠 Feed", "📩 Messages", "�
 with tab_home:
     st.markdown("<h4 style='color:white; margin-left: 10px;'>Potential Customers</h4>", unsafe_allow_html=True)
     
-    # Datos simulados
+    # Datos simulados de clientes
     customers = [
         {"type": "appointment"},
         {"type": "appointment"},
@@ -77,28 +83,30 @@ with tab_home:
         {"type": "follow_up"}
     ]
 
-    # 3. COMPONENTE DE HISTORIAS (ENCAPSULADO)
+    # 3. COMPONENTE DE HISTORIAS (ENCAPSULADO PARA EVITAR ERROR DE TEXTO)
     stories_content = ""
     for person in customers:
+        # Colores de borde: Verde para cita, Naranja para seguimiento
         border_color = "#28A745" if person['type'] == "appointment" else "#FF8C00"
         stories_content += f'''
-            <div style="display: flex; flex-direction: column; align-items: center; min-width: 95px;">
-                <div style="width: 85px; height: 85px; border-radius: 50%; background: white; display: flex; justify-content: center; align-items: center; border: 4px solid {border_color}; box-shadow: 0 4px 8px rgba(0,0,0,0.2);">
-                    <img src="{HOUSE_ICON_URL}" style="width: 50px; height: 50px;">
+            <div style="display: flex; flex-direction: column; align-items: center; min-width: 100px;">
+                <div style="width: 85px; height: 85px; border-radius: 50%; background: white; display: flex; justify-content: center; align-items: center; border: 4px solid {border_color}; box-shadow: 0 4px 8px rgba(0,0,0,0.3);">
+                    <img src="{HOUSE_ICON_URL}" style="width: 55px; height: 55px;">
                 </div>
                 <div style="font-size: 13px; color: white; margin-top: 10px; font-weight: 600; font-family: sans-serif; text-align: center;">Owner</div>
             </div>
         '''
 
+    # Renderizado seguro mediante Iframe para evitar errores de interpretación
     components.html(f"""
         <div style="display: flex; flex-direction: row; overflow-x: auto; gap: 20px; padding: 10px; scrollbar-width: none; -ms-overflow-style: none;">
             {stories_content}
         </div>
         <style>
             div::-webkit-scrollbar {{ display: none; }}
-            body {{ margin: 0; padding: 0; background-color: transparent; }}
+            body {{ margin: 0; padding: 0; background-color: transparent; overflow: hidden; }}
         </style>
-    """, height=160)
+    """, height=165)
 
     st.markdown("<hr style='opacity:0.2; margin: 10px 0;'>", unsafe_allow_html=True)
     
