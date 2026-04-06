@@ -1,94 +1,37 @@
 import streamlit as st
+import streamlit.components.v1 as components
 
 # 1. Configuración de página
 st.set_page_config(page_title="Roof-Aid Tech", layout="centered")
 
 # --- RUTAS DE ARCHIVOS ---
+# Asegúrate de que el nombre coincida exactamente en tu repositorio de GitHub
 LOGO_URL = "Gemini_Generated_Image_i6ft8ji6ft8ji6ft.png"
 HOUSE_ICON_URL = "https://cdn-icons-png.flaticon.com/512/619/619153.png"
 
-# --- CSS PARA EL LOOK DE INSTAGRAM (AZUL REY) ---
+# --- CSS GLOBAL (AZUL REY Y ESTRUCTURA) ---
 st.markdown(f"""
     <style>
-    /* Fondo Azul Rey Total */
+    /* Fondo Azul Rey en toda la App */
     .stApp {{
         background-color: #0047AB !important;
         color: white;
     }}
     
-    /* Cabecera Fija con Logo Central */
+    /* Logo Central Superior */
     .ig-header {{
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 80px;
-        background-color: #0047AB;
         display: flex;
         justify-content: center;
         align-items: center;
-        z-index: 9999;
-        border-bottom: 1px solid rgba(255,255,255,0.2);
+        padding: 20px 0;
+        width: 100%;
+        background-color: #0047AB;
+        border-bottom: 1px solid rgba(255,255,255,0.1);
     }}
     
     .main-logo {{
-        height: 55px;
+        height: 70px;
         width: auto;
-    }}
-    
-    /* Espaciado para que el contenido no quede bajo el logo */
-    .main-content {{
-        margin-top: 90px;
-    }}
-
-    /* Contenedor de Stories */
-    .story-scroll-container {{
-        display: flex;
-        flex-direction: row;
-        overflow-x: auto;
-        gap: 25px;
-        padding: 15px 5px;
-        scrollbar-width: none;
-    }}
-    .story-scroll-container::-webkit-scrollbar {{ display: none; }}
-
-    .story-item {{
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        min-width: 90px;
-    }}
-
-    /* Círculos 30% más grandes */
-    .story-circle {{
-        width: 85px;
-        height: 85px;
-        border-radius: 50%;
-        background-color: white;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        border: 4px solid white;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-    }}
-
-    /* Bordes de estado */
-    .border-appointment {{ border-color: #28A745 !important; }}
-    .border-followup {{ border-color: #FF8C00 !important; }}
-
-    .house-icon-img {{
-        width: 50px;
-        height: 50px;
-    }}
-
-    /* Nombre Owner centrado debajo */
-    .owner-label {{
-        font-size: 13px;
-        color: white !important;
-        margin-top: 10px;
-        text-align: center;
-        font-weight: 600;
-        width: 100%;
     }}
 
     /* Tabs Inferiores */
@@ -102,59 +45,60 @@ st.markdown(f"""
         border-top: 1px solid rgba(255,255,255,0.1);
     }}
     
-    /* Forzar color de texto en Tabs */
     button[data-baseweb="tab"] p {{
         color: white !important;
+        font-weight: bold;
     }}
     </style>
     """, unsafe_allow_html=True)
 
-# 2. Header con Logo
+# 2. RENDERIZADO DEL LOGO CENTRAL
 st.markdown(f'<div class="ig-header"><img src="{LOGO_URL}" class="main-logo"></div>', unsafe_allow_html=True)
-
-# 3. Contenedor de contenido
-st.markdown('<div class="main-content">', unsafe_allow_html=True)
 
 # --- NAVEGACIÓN ---
 tab_home, tab_messages, tab_profile = st.tabs(["🏠 Feed", "📩 Messages", "👤 Profile"])
 
 with tab_home:
-    st.markdown("<h3 style='color:white;'>Potential Customers</h3>", unsafe_allow_html=True)
+    st.markdown("<h3 style='color:white; margin-top:10px;'>Potential Customers</h3>", unsafe_allow_html=True)
     
-    # Datos de ejemplo
+    # Simulación de datos de clientes
     customers = [
-        {"id": 1, "type": "appointment"},
-        {"id": 2, "type": "appointment"},
-        {"id": 3, "type": "follow_up"},
-        {"id": 4, "type": "follow_up"},
-        {"id": 5, "type": "follow_up"},
+        {"type": "appointment"},
+        {"type": "appointment"},
+        {"type": "follow_up"},
+        {"type": "follow_up"},
+        {"type": "follow_up"}
     ]
 
-    # Construcción robusta del HTML de Stories
-    stories_html = '<div class="story-scroll-container">'
+    # 3. COMPONENTE DE HISTORIAS (ENCAPSULADO PARA EVITAR ERROR DE TEXTO)
+    stories_content = ""
     for person in customers:
-        border_class = "border-appointment" if person['type'] == "appointment" else "border-followup"
-        stories_html += f'''
-            <div class="story-item">
-                <div class="story-circle {border_class}">
-                    <img src="{HOUSE_ICON_URL}" class="house-icon-img">
+        border_color = "#28A745" if person['type'] == "appointment" else "#FF8C00"
+        stories_content += f'''
+            <div style="display: flex; flex-direction: column; align-items: center; min-width: 95px;">
+                <div style="width: 85px; height: 85px; border-radius: 50%; background: white; display: flex; justify-content: center; align-items: center; border: 4px solid {border_color}; box-shadow: 0 4px 8px rgba(0,0,0,0.2);">
+                    <img src="{HOUSE_ICON_URL}" style="width: 50px; height: 50px;">
                 </div>
-                <p class="owner-label">Owner</p>
+                <div style="font-size: 13px; color: white; margin-top: 10px; font-weight: 600; font-family: sans-serif; text-align: center;">Owner</div>
             </div>
         '''
-    stories_html += '</div>'
-    
-    # Renderizado final
-    st.markdown(stories_html, unsafe_allow_html=True)
+
+    # Inyectamos el HTML de las historias de forma aislada
+    components.html(f"""
+        <div style="display: flex; flex-direction: row; overflow-x: auto; gap: 20px; padding: 10px; scrollbar-width: none;">
+            {stories_content}
+        </div>
+        <style>
+            div::-webkit-scrollbar {{ display: none; }}
+        </style>
+    """, height=160)
 
     st.markdown("<hr style='opacity:0.2;'>", unsafe_allow_html=True)
     
-    # Sección Feed
+    # 4. SECCIÓN FEED
     st.markdown("<h3 style='color:white;'>Feed</h3>", unsafe_allow_html=True)
     st.video("https://www.w3schools.com/html/mov_bbb.mp4")
-    st.write("**Storm Intel:** Hail activity detected in NWA.")
+    st.write("**Storm Intel:** Actividad de granizo detectada en el área de NWA. Revisa tus leads.")
 
 with tab_messages:
     st.chat_message("assistant").write("Hi, this is Riley from ROOF-AID. Ready to claim some leads?")
-
-st.markdown('</div>', unsafe_allow_html=True)
