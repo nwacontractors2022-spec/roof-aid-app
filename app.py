@@ -7,23 +7,32 @@ import os
 st.set_page_config(page_title="Roof-Aid Tech", layout="centered")
 
 # --- CONEXIÓN A GOOGLE SHEETS ---
-@st.cache_data(ttl=300)
+@st.cache_data(ttl=60)  # Se actualiza cada minuto para ver cambios rápido
 def load_data(url):
     try:
-        csv_url = url.replace("/edit#gid=", "/export?format=csv&gid=")
-        return pd.read_csv(csv_url)
-    except:
+        # Transformamos link de edición a link de exportación directa
+        csv_url = url.replace("/edit", "/export?format=csv")
+        # Ajuste para Sheets con múltiples pestañas (usa el gid de tu captura)
+        if "gid=" in url and "gid=" not in csv_url:
+            gid = url.split("gid=")[-1]
+            csv_url += f"&gid={gid}"
+        
+        data = pd.read_csv(csv_url)
+        return data
+    except Exception as e:
         return pd.DataFrame()
 
-# Cargamos datos de clientes
-try:
-    sheet_url = st.secrets["gsheet_url"]
-    df = load_data(sheet_url)
-    customers = df.to_dict('records')
-except:
-    customers = []
+# Intentamos cargar desde Secrets
+sheet_url = st.secrets.get("gsheet_url", "")
+df = load_data(sheet_url)
 
-# --- CONFIGURACIÓN VISUAL (Azul Rey) ---
+if not df.empty:
+    customers = df.to_dict('records')
+else:
+    # Datos de cortesía por si el enlace falla momentáneamente
+    customers = [{"First Name": "Check", "Last Name": "Connection", "type": "FOLLOW UP"}]
+
+# --- CONFIGURACIÓN VISUAL (Estilo Instagram Dark) ---
 LOGO_URL = "https://raw.githubusercontent.com/nwacontractors2022-spec/roof-aid-app/main/Gemini_Generated_Image_i6ft8ji6ft8ji6ft.png"
 HOUSE_ICON_URL = "https://cdn-icons-png.flaticon.com/512/619/619153.png"
 
@@ -33,68 +42,83 @@ st.markdown(f"""
     .ig-header {{ display: flex; justify-content: center; padding: 15px 0; background-color: #0047AB; border-bottom: 1px solid rgba(255,255,255,0.1); }}
     .main-logo {{ height: 80px; width: auto; }}
     .stTabs [data-baseweb="tab-list"] {{ position: fixed; bottom: 0; background-color: #003380; width: 100%; z-index: 1000; justify-content: center; padding-bottom: 10px; }}
-    button[data-baseweb="tab"] p {{ color: white !important; font-weight: bold; }}
+    button[data-baseweb="tab"] p {{ color: white !important; font-weight: bold; font-size: 14px; }}
     #MainMenu, footer, header {{visibility: hidden;}}
     </style>
     """, unsafe_allow_html=True)
 
+# Logo de Cabecera
 st.markdown(f'<div class="ig-header"><img src="{LOGO_URL}" class="main-logo"></div>', unsafe_allow_html=True)
 
-# --- NAVEGACIÓN ---
+# --- SISTEMA DE PESTAÑAS (TABS) ---
 tab_home, tab_messages, tab_profile = st.tabs(["🏠 Feed", "📩 Messages", "👤 Profile"])
 
 with tab_home:
-    # SECCIÓN: Potential Customers (Historias)
-    st.markdown("<h4 style='margin-left: 10px;'>Potential Customers</h4>", unsafe_allow_html=True)
-    if customers:
-        stories_html = ""
-        for p in customers:
-            color = "#28A745" if str(p.get('type', '')).lower() == "appointment" else "#FF8C00"
-            full_name = f"{p.get('nombre', '')} {p.get('apellido', '')}".strip()
-            stories_html += f'''
-                <div style="display: flex; flex-direction: column; align-items: center; min-width: 100px;">
-                    <div style="width: 85px; height: 85px; border-radius: 50%; background: white; display: flex; justify-content: center; align-items: center; border: 4px solid {color}; box-shadow: 0 4px 8px rgba(0,0,0,0.2);">
-                        <img src="{HOUSE_ICON_URL}" style="width: 55px; height: 55px;">
-                    </div>
-                    <div style="font-size: 11px; color: white; margin-top: 8px; font-weight: 600; text-align: center; width: 95px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                        {full_name if full_name else 'Owner'}
-                    </div>
-                </div>
-            '''
-        components.html(f'<div style="display: flex; gap: 15px; overflow-x: auto; padding: 10px; scrollbar-width: none;">{stories_html}</div>', height=165)
-
-    st.markdown("<hr style='opacity:0.2; margin: 10px 0;'>", unsafe_allow_html=True)
+    # SECCIÓN: Potential Customers (Historias Dinámicas)
+    st.markdown("<h4 style='margin-left: 10px; margin-top: 10px;'>Potential Customers</h4>", unsafe_allow_html=True)
     
-    # SECCIÓN: Feed Dinámico (Content Media)
+    stories_html = ""
+    for p in customers:
+        # Lógica de color: Verde para Citas, Naranja para Follow Ups
+        status_type = str(p.get('type', '')).upper()
+        border_color = "#28A745" if "APPOINTMENT" in status_type else "#FF8C00"
+        
+        # Nombre y Apellido desde tu Excel
+        f_name = p.get('First Name', 'Owner')
+        l_name = p.get('Last Name', '')
+        
+        stories_html += f'''
+            <div style="display: flex; flex-direction: column; align-items: center; min-width: 95px;">
+                <div style="width: 75px; height: 75px; border-radius: 50%; background: white; display: flex; justify-content: center; align-items: center; border: 4px solid {border_color}; box-shadow: 0 4px 6px rgba(0,0,0,0.3);">
+                    <img src="{HOUSE_ICON_URL}" style="width: 45px; height: 45px;">
+                </div>
+                <div style="font-size: 10px; color: white; margin-top: 8px; font-weight: 600; text-align: center; width: 90px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: sans-serif;">
+                    {f_name}<br>{l_name}
+                </div>
+            </div>
+        '''
+
+    # Contenedor de historias con scroll horizontal
+    components.html(f'''
+        <div style="display: flex; gap: 12px; overflow-x: auto; padding: 5px 10px; scrollbar-width: none; -ms-overflow-style: none;">
+            {stories_html}
+        </div>
+        <style>div::-webkit-scrollbar {{ display: none; }} body {{ margin: 0; background: transparent; }}</style>
+    ''', height=140)
+
+    st.markdown("<hr style='opacity:0.2; margin: 5px 0;'>", unsafe_allow_html=True)
+    
+    # SECCIÓN: Feed (Tus Videos e Imágenes)
     st.markdown("<h4 style='margin-left: 10px;'>Roofing Feed</h4>", unsafe_allow_html=True)
     
-    # Ruta local a la carpeta
     MEDIA_DIR = "content media"
-    
     if os.path.exists(MEDIA_DIR):
-        # Listamos archivos omitiendo el ancla 'keephub'
-        files = sorted([f for f in os.listdir(MEDIA_DIR) if f != "keephub"])
+        # Listamos archivos omitiendo el archivo oculto keephub
+        files = sorted([f for f in os.listdir(MEDIA_DIR) if f != "keephub"], reverse=True)
         
         if files:
             for file in files:
                 file_path = os.path.join(MEDIA_DIR, file)
-                # Mostramos videos (.mov o .mp4)
-                if file.lower().endswith(('.mp4', '.mov', '.avi')):
+                if file.lower().endswith(('.mp4', '.mov')):
                     st.video(file_path)
-                    st.markdown(f"<p style='text-align:center; font-size:12px; opacity:0.7;'>{file}</p>", unsafe_allow_html=True)
-                # Mostramos imágenes
                 elif file.lower().endswith(('.png', '.jpg', '.jpeg')):
                     st.image(file_path, use_column_width=True)
-                st.markdown("<hr style='opacity:0.1;'>", unsafe_allow_html=True)
+                st.markdown("<div style='margin-bottom: 20px;'></div>", unsafe_allow_html=True)
         else:
-            st.info("No se encontraron archivos en 'content media'.")
+            st.info("La carpeta 'content media' está vacía.")
     else:
-        st.error(f"No se detectó la carpeta '{MEDIA_DIR}'.")
+        st.error(f"Error: No se encontró la carpeta '{MEDIA_DIR}'")
 
 with tab_messages:
+    # Saludo de Riley configurado
     st.chat_message("assistant").write("Hi, this is Riley from ROOF-AID. hope you're doing today!")
+    st.write("---")
+    st.write("📩 *Lead updates will appear here.*")
 
 with tab_profile:
     st.subheader("System Status")
-    st.write(f"📁 Media Folder: `{MEDIA_DIR}`")
-    st.write(f"👥 Leads in Sheet: {len(customers)}")
+    st.write(f"📊 **Total Leads:** {len(customers)}")
+    st.write(f"📁 **Media Folder:** {MEDIA_DIR}")
+    if st.button("Recargar Datos"):
+        st.cache_data.clear()
+        st.rerun()
