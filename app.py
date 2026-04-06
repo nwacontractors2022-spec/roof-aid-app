@@ -3,122 +3,162 @@ import streamlit.components.v1 as components
 import pandas as pd
 import os
 
-# 1. Configuración de página
+# 1. Configuración de la aplicación
 st.set_page_config(page_title="Roof-Aid Tech", layout="centered")
 
-# --- CONEXIÓN A GOOGLE SHEETS ---
-@st.cache_data(ttl=60)  # Se actualiza cada minuto para ver cambios rápido
+# --- CARGA DE DATOS ---
+@st.cache_data(ttl=60)
 def load_data(url):
     try:
-        # Transformamos link de edición a link de exportación directa
-        csv_url = url.replace("/edit", "/export?format=csv")
-        # Ajuste para Sheets con múltiples pestañas (usa el gid de tu captura)
-        if "gid=" in url and "gid=" not in csv_url:
-            gid = url.split("gid=")[-1]
-            csv_url += f"&gid={gid}"
-        
-        data = pd.read_csv(csv_url)
+        data = pd.read_csv(url)
+        data.columns = data.columns.str.strip()
         return data
-    except Exception as e:
+    except:
         return pd.DataFrame()
 
-# Intentamos cargar desde Secrets
 sheet_url = st.secrets.get("gsheet_url", "")
 df = load_data(sheet_url)
+customers = df.to_dict('records') if not df.empty else []
 
-if not df.empty:
-    customers = df.to_dict('records')
-else:
-    # Datos de cortesía por si el enlace falla momentáneamente
-    customers = [{"First Name": "Check", "Last Name": "Connection", "type": "FOLLOW UP"}]
+# --- ESTADO DE NAVEGACIÓN ---
+if 'view' not in st.session_state:
+    st.session_state.view = "feed"
+if 'selected_idx' not in st.session_state:
+    st.session_state.selected_idx = None
 
-# --- CONFIGURACIÓN VISUAL (Estilo Instagram Dark) ---
-LOGO_URL = "https://raw.githubusercontent.com/nwacontractors2022-spec/roof-aid-app/main/Gemini_Generated_Image_i6ft8ji6ft8ji6ft.png"
-HOUSE_ICON_URL = "https://cdn-icons-png.flaticon.com/512/619/619153.png"
+def show_customer(idx):
+    st.session_state.view = "preview"
+    st.session_state.selected_idx = idx
 
+def show_feed():
+    st.session_state.view = "feed"
+    st.session_state.selected_idx = None
+
+# --- DISEÑO UI (CSS) ---
 st.markdown(f"""
     <style>
     .stApp {{ background-color: #0047AB !important; color: white; }}
     .ig-header {{ display: flex; justify-content: center; padding: 15px 0; background-color: #0047AB; border-bottom: 1px solid rgba(255,255,255,0.1); }}
-    .main-logo {{ height: 80px; width: auto; }}
-    .stTabs [data-baseweb="tab-list"] {{ position: fixed; bottom: 0; background-color: #003380; width: 100%; z-index: 1000; justify-content: center; padding-bottom: 10px; }}
-    button[data-baseweb="tab"] p {{ color: white !important; font-weight: bold; font-size: 14px; }}
+    .main-logo {{ height: 70px; width: auto; }}
+    
+    /* Estilo de la Tarjeta de Vista Previa */
+    .preview-container {{
+        background: white;
+        color: #1e1e1e;
+        border-radius: 20px;
+        padding: 25px;
+        margin-top: 10px;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+    }}
+    .client-name {{ font-size: 28px; font-weight: bold; color: #0047AB; margin-bottom: 5px; }}
+    .status-tag {{
+        display: inline-block;
+        padding: 5px 12px;
+        border-radius: 15px;
+        font-size: 12px;
+        font-weight: bold;
+        text-transform: uppercase;
+        margin-bottom: 20px;
+    }}
+    .info-row {{ margin-bottom: 15px; border-bottom: 1px solid #f0f0f0; padding-bottom: 10px; }}
+    .info-label {{ font-size: 12px; color: #666; text-transform: uppercase; }}
+    .info-value {{ font-size: 17px; font-weight: 500; color: #333; }}
+    
     #MainMenu, footer, header {{visibility: hidden;}}
     </style>
     """, unsafe_allow_html=True)
 
-# Logo de Cabecera
-st.markdown(f'<div class="ig-header"><img src="{LOGO_URL}" class="main-logo"></div>', unsafe_allow_html=True)
+# Encabezado con Logo
+st.markdown(f'<div class="ig-header"><img src="https://raw.githubusercontent.com/nwacontractors2022-spec/roof-aid-app/main/Gemini_Generated_Image_i6ft8ji6ft8ji6ft.png" class="main-logo"></div>', unsafe_allow_html=True)
 
-# --- SISTEMA DE PESTAÑAS (TABS) ---
-tab_home, tab_messages, tab_profile = st.tabs(["🏠 Feed", "📩 Messages", "👤 Profile"])
-
-with tab_home:
-    # SECCIÓN: Potential Customers (Historias Dinámicas)
-    st.markdown("<h4 style='margin-left: 10px; margin-top: 10px;'>Potential Customers</h4>", unsafe_allow_html=True)
+# --- VISTA: PREVIA DEL CLIENTE ---
+if st.session_state.view == "preview" and st.session_state.selected_idx is not None:
+    p = customers[st.session_state.selected_idx]
     
-    stories_html = ""
-    for p in customers:
-        # Lógica de color: Verde para Citas, Naranja para Follow Ups
-        status_type = str(p.get('type', '')).upper()
-        border_color = "#28A745" if "APPOINTMENT" in status_type else "#FF8C00"
-        
-        # Nombre y Apellido desde tu Excel
-        f_name = p.get('First Name', 'Owner')
-        l_name = p.get('Last Name', '')
-        
-        stories_html += f'''
-            <div style="display: flex; flex-direction: column; align-items: center; min-width: 95px;">
-                <div style="width: 75px; height: 75px; border-radius: 50%; background: white; display: flex; justify-content: center; align-items: center; border: 4px solid {border_color}; box-shadow: 0 4px 6px rgba(0,0,0,0.3);">
-                    <img src="{HOUSE_ICON_URL}" style="width: 45px; height: 45px;">
-                </div>
-                <div style="font-size: 10px; color: white; margin-top: 8px; font-weight: 600; text-align: center; width: 90px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: sans-serif;">
-                    {f_name}<br>{l_name}
-                </div>
+    if st.button("⬅️ Volver al Feed"):
+        show_feed()
+        st.rerun()
+
+    status = str(p.get('type', 'FOLLOW UP')).upper()
+    bg_color = "#D4EDDA" if "APPOINTMENT" in status else "#FFF3CD"
+    txt_color = "#155724" if "APPOINTMENT" in status else "#856404"
+
+    st.markdown(f"""
+        <div class="preview-container">
+            <div class="client-name">{p.get('First Name', '')} {p.get('Last Name', '')}</div>
+            <div class="status-tag" style="background-color: {bg_color}; color: {txt_color};">
+                ● {status}
             </div>
-        '''
-
-    # Contenedor de historias con scroll horizontal
-    components.html(f'''
-        <div style="display: flex; gap: 12px; overflow-x: auto; padding: 5px 10px; scrollbar-width: none; -ms-overflow-style: none;">
-            {stories_html}
+            
+            <div class="info-row">
+                <div class="info-label">Teléfono</div>
+                <div class="info-value">📱 {p.get('Phone Number', 'Sin número')}</div>
+            </div>
+            
+            <div class="info-row">
+                <div class="info-label">Dirección</div>
+                <div class="info-value">🏠 {p.get('Full Address', 'N/A')}</div>
+            </div>
+            
+            <div class="info-row">
+                <div class="info-label">Ubicación</div>
+                <div class="info-value">📍 {p.get('City', '')}, {p.get('State', '')} {p.get('Zip Code', '')}</div>
+            </div>
         </div>
-        <style>div::-webkit-scrollbar {{ display: none; }} body {{ margin: 0; background: transparent; }}</style>
-    ''', height=140)
+    """, unsafe_allow_html=True)
+    
+    # Botón de llamada real
+    tel = str(p.get('Phone Number', '')).replace("-", "").replace(" ", "").replace("(", "").replace(")", "")
+    st.link_button(f"📞 LLAMAR A {p.get('First Name', '').upper()}", f"tel:{tel}", use_container_width=True)
 
-    st.markdown("<hr style='opacity:0.2; margin: 5px 0;'>", unsafe_allow_html=True)
+# --- VISTA: FEED PRINCIPAL ---
+else:
+    tab_home, tab_msg, tab_prof = st.tabs(["🏠 Feed", "📩 Mensajes", "👤 Perfil"])
     
-    # SECCIÓN: Feed (Tus Videos e Imágenes)
-    st.markdown("<h4 style='margin-left: 10px;'>Roofing Feed</h4>", unsafe_allow_html=True)
-    
-    MEDIA_DIR = "content media"
-    if os.path.exists(MEDIA_DIR):
-        # Listamos archivos omitiendo el archivo oculto keephub
-        files = sorted([f for f in os.listdir(MEDIA_DIR) if f != "keephub"], reverse=True)
+    with tab_home:
+        st.markdown("<h4 style='margin-top:10px;'>Potential Customers</h4>", unsafe_allow_html=True)
         
-        if files:
+        # Carrusel de Historias Clickeables
+        if customers:
+            # Creamos una fila horizontal con scroll usando HTML/JS
+            cols = st.columns(len(customers))
+            for i, p in enumerate(customers):
+                with cols[i]:
+                    status = str(p.get('type', '')).upper()
+                    color = "#28A745" if "APPOINTMENT" in status else "#FF8C00"
+                    
+                    # Botón invisible sobre el círculo para detectar el click
+                    if st.button(f"{p.get('First Name')}", key=f"user_{i}"):
+                        show_customer(i)
+                        st.rerun()
+                    
+                    st.markdown(f'''
+                        <div style="text-align: center; margin-top: -10px;">
+                            <div style="width: 55px; height: 55px; border-radius: 50%; border: 3px solid {color}; background: white; margin: 0 auto; display: flex; align-items: center; justify-content: center;">
+                                <img src="https://cdn-icons-png.flaticon.com/512/619/619153.png" style="width: 30px;">
+                            </div>
+                        </div>
+                    ''', unsafe_allow_html=True)
+
+        st.markdown("<hr style='opacity:0.2;'>", unsafe_allow_html=True)
+        
+        # Roofing Feed
+        st.markdown("<h4>Roofing Feed</h4>", unsafe_allow_html=True)
+        MEDIA_DIR = "content media"
+        if os.path.exists(MEDIA_DIR):
+            files = sorted([f for f in os.listdir(MEDIA_DIR) if f != "keephub"], reverse=True)
             for file in files:
                 file_path = os.path.join(MEDIA_DIR, file)
                 if file.lower().endswith(('.mp4', '.mov')):
                     st.video(file_path)
                 elif file.lower().endswith(('.png', '.jpg', '.jpeg')):
-                    st.image(file_path, use_column_width=True)
-                st.markdown("<div style='margin-bottom: 20px;'></div>", unsafe_allow_html=True)
-        else:
-            st.info("La carpeta 'content media' está vacía.")
-    else:
-        st.error(f"Error: No se encontró la carpeta '{MEDIA_DIR}'")
+                    st.image(file_path)
 
-with tab_messages:
-    # Saludo de Riley configurado
-    st.chat_message("assistant").write("Hi, this is Riley from ROOF-AID. hope you're doing today!")
-    st.write("---")
-    st.write("📩 *Lead updates will appear here.*")
+    with tab_msg:
+        st.chat_message("assistant").write("Hi, this is Riley from ROOF-AID. Selecciona un cliente arriba para ver sus detalles.")
 
-with tab_profile:
-    st.subheader("System Status")
-    st.write(f"📊 **Total Leads:** {len(customers)}")
-    st.write(f"📁 **Media Folder:** {MEDIA_DIR}")
-    if st.button("Recargar Datos"):
-        st.cache_data.clear()
-        st.rerun()
+    with tab_prof:
+        st.subheader("Configuración")
+        if st.button("🔄 Sincronizar con Google Sheets"):
+            st.cache_data.clear()
+            st.rerun()
