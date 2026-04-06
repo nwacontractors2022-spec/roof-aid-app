@@ -3,152 +3,127 @@ import streamlit as st
 # Configuración de página para móviles
 st.set_page_config(page_title="Roof-Aid App", layout="centered")
 
-# URL de tu logo (ya verificado de tus capturas)
-LOGO_URL = "https://nwacontractors2022-spec/repo/image_9.png" # Si esta URL cambia, actualízala aquí
+# --- RUTA DEL LOGO (Basado en el archivo subido a GitHub) ---
+# Se utiliza el nombre exacto del archivo que mencionaste
+LOGO_URL = "WhatsApp Image 2026-02-21 at 9.25.44 PM.jpeg"
 
-# URL del icono de casa genérico (estilo trazo negro)
+# Icono de casa para las historias
 HOUSE_ICON_URL = "https://cdn-icons-png.flaticon.com/512/619/619153.png"
 
-# --- CSS PERSONALIZADO (Look Premium & Colores de Marca) ---
+# --- CSS PERSONALIZADO (Estilo Instagram Premium) ---
 st.markdown(f"""
     <style>
-    /* 1. Fondo Azul Metálico y Letras Blancas en toda la App */
     .stApp {{
         background: radial-gradient(circle, #203a5c 0%, #152033 100%);
         color: white;
     }}
     
-    /* Forzar color blanco en títulos y subtítulos */
+    /* Contenedor del Logo en la parte superior derecha */
+    .logo-container {{
+        display: flex;
+        justify-content: flex-end;
+        margin-top: -60px;
+        margin-bottom: 20px;
+    }}
+    .main-logo {{
+        width: 110px;
+        border-radius: 10px;
+    }}
+    
     h1, h2, h3, h4, h5, h6, p, label {{
         color: white !important;
     }}
     
-    /* 2. Logotipo en la esquina superior derecha (fixed) */
-    .main-logo {{
-        position: fixed;
-        top: 60px; /* Ajuste para la barra de streamlit */
-        right: 15px;
-        width: 100px;
-        z-index: 999;
-    }}
-    
-    /* 3. Estilo de los círculos de historias (Instagram Style) */
-    .story-circle {{
-        display: block;
-        margin-left: auto;
-        margin-right: auto;
-        border-radius: 50%;
-        width: 65px;
-        height: 65px;
-        padding: 3px;
-        background-color: white; /* Fondo blanco para que resalte la casa negra */
-    }}
-    
-    /* Bordes dinámicos */
-    .orange-border {{ 
-        border: 4px solid #F57C00; /* Naranja (Follow-ups) */
-        box-shadow: 0 0 10px rgba(245, 124, 0, 0.5);
-    }} 
-    .green-border {{ 
-        border: 4px solid #28A745; /* Verde IG (Appointments) */
-        box-shadow: 0 0 10px rgba(40, 167, 69, 0.5);
-    }}
-    
-    /* Icono de la casa dentro del círculo */
-    .house-icon {{
-        width: 50px;
-        margin-top: 5px;
+    /* Estilo de los círculos de historias */
+    .story-wrapper {{
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
     }}
 
-    /* 4. Ajuste de la navegación inferior (Fondo azul oscuro para integrarse) */
+    .story-circle {{
+        border-radius: 50%;
+        width: 70px;
+        height: 70px;
+        padding: 3px;
+        background-color: white;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-bottom: 5px;
+    }}
+    
+    .orange-border {{ border: 4px solid #F57C00; box-shadow: 0 0 10px rgba(245, 124, 0, 0.3); }} 
+    .green-border {{ border: 4px solid #28A745; box-shadow: 0 0 10px rgba(40, 167, 69, 0.3); }}
+    
+    .house-icon {{ width: 45px; }}
+
+    /* Texto centrado debajo del círculo */
+    .owner-label {{
+        font-size: 12px;
+        font-weight: 500;
+        margin-top: 2px;
+        white-space: nowrap;
+    }}
+
+    /* Ocultar botones de navegación nativos si fuera necesario y ajustar tabs */
     .stTabs [data-baseweb="tab-list"] {{
         position: fixed;
         bottom: 0;
-        background: linear-gradient(180deg, #152033 0%, #101826 100%);
+        background: #152033;
         z-index: 100;
         width: 100%;
         justify-content: center;
         border-top: 1px solid rgba(255,255,255,0.1);
     }}
-    
-    /* Estilo de los botones de historias */
-    .stButton>button {{
-        border-radius: 20px;
-        border: 1px solid rgba(255,255,255,0.2);
-        background-color: rgba(255,255,255,0.05);
-        color: white;
-    }}
-    .stButton>button:hover {{
-        background-color: #F57C00; /* Efecto naranja al pasar */
-        border-color: #F57C00;
-    }}
     </style>
     """, unsafe_allow_html=True)
 
-# --- INYECCIÓN DEL LOGO ---
-# Se inyecta como HTML para posicionarlo en la esquina
-st.markdown(f'<img src="{LOGO_URL}" class="main-logo">', unsafe_allow_html=True)
+# 1. Inyección del Logo de la empresa
+st.markdown(f'<div class="logo-container"><img src="{LOGO_URL}" class="main-logo"></div>', unsafe_allow_html=True)
 
-# --- NAVEGACIÓN INFERIOR (Módulos IG) ---
+# --- NAVEGACIÓN INFERIOR ---
 tab_home, tab_messages, tab_profile = st.tabs(["🏠 Feed", "📩 Messages", "👤 Profile"])
 
-# --- MÓDULO 1: HOME (STORIES & FEED) ---
 with tab_home:
-    # 1. SECCIÓN STORIES (Renombrada a Potential Customers)
     st.write("### Potential Customers")
-    s_col1, s_col2, s_col3, s_col4 = st.columns(4)
     
-    # Historias simuladas con la lógica de color solicitada
-    with s_col1:
-        # Borde Naranja (Follow-up)
-        st.markdown(f'<div class="story-circle orange-border"><img src="{HOUSE_ICON_URL}" class="house-icon"></div>', unsafe_allow_html=True)
-        st.caption("Portland")
-        st.button("Follow", key="f1")
+    # Creamos 4 columnas para las historias
+    cols = st.columns(4)
+    
+    # Datos de ejemplo (Luego esto vendrá de tu base de datos)
+    stories = [
+        {"name": "Owner", "border": "orange-border"},
+        {"name": "Owner", "border": "green-border"},
+        {"name": "Owner", "border": "orange-border"},
+        {"name": "Owner", "border": "green-border"}
+    ]
+    
+    for i, story in enumerate(stories):
+        with cols[i]:
+            st.markdown(f"""
+                <div class="story-wrapper">
+                    <div class="story-circle {story['border']}">
+                        <img src="{HOUSE_ICON_URL}" class="house-icon">
+                    </div>
+                    <div class="owner-label">{story['name']}</div>
+                </div>
+            """, unsafe_allow_html=True)
 
-    with s_col2:
-        # Borde Verde (Appointment)
-        st.markdown(f'<div class="story-circle green-border"><img src="{HOUSE_ICON_URL}" class="house-icon"></div>', unsafe_allow_html=True)
-        st.caption("Corpus")
-        st.button("Get Appt", key="a1")
-
-    with s_col3:
-        # Borde Naranja (Follow-up)
-        st.markdown(f'<div class="story-circle orange-border"><img src="{HOUSE_ICON_URL}" class="house-icon"></div>', unsafe_allow_html=True)
-        st.caption("Mobile")
-        st.button("Follow", key="f2")
-
-    with s_col4:
-        # Borde Verde (Appointment)
-        st.markdown(f'<div class="story-circle green-border"><img src="{HOUSE_ICON_URL}" class="house-icon"></div>', unsafe_allow_html=True)
-        st.caption("Arkansas")
-        st.button("Get Appt", key="a2")
-
+    st.markdown("<br>", unsafe_allow_html=True)
     st.divider()
-
-    # 2. SECCIÓN FEED (Renombrada a Feed)
+    
     st.write("### Feed")
-    # Video simulado (El conejo de prueba)
+    # Video del feed (reemplazar link por el real de tu avatar de IA después)
     st.video("https://www.w3schools.com/html/mov_bbb.mp4") 
-    st.write("**Storm Intel:** Granizo detectado en NWA. 120 reclamos de seguro potenciales.")
-    
-    # Imagen de Marketing simulada
-    st.image("https://via.placeholder.com/600x400/1a1a1a/ffffff?text=Insurance+Restoration+Data", use_container_width=True)
+    st.write("**Storm Intel:** Hail activity detected in your area. Check potential claims below.")
 
-# --- MÓDULO 2: MESSAGES (BUZÓN CENTRAL) ---
 with tab_messages:
-    st.write("### Communications Center")
-    st.info("⚠️ Alerta Especial: Tormenta de granizo en Corpus Christi.")
-    st.chat_message("assistant").write("Hola! Soy tu soporte técnico. ¿Tienes dudas con una licencia?")
+    st.write("### Messages")
+    st.chat_message("assistant").write("Hi, this is Riley from ROOF-AID. Hope you're doing today!")
 
-# --- MÓDULO 3: PROFILE (LICENCIA AUDITABLE) ---
 with tab_profile:
-    st.write("### Contractor Profile")
-    p_col1, p_col2 = st.columns([1, 2])
-    with p_col1:
-        st.image("https://cdn-icons-png.flaticon.com/512/3135/3135715.png", width=90)
-    with p_col2:
-        st.write("#### Roofer Pro ✅")
-        st.write("**License:** #TX-99812-RC")
-    
-    st.divider()
-    st.write(f"**Tier:** Premium ($600/mo)")
+    st.write("### Profile")
+    st.write("**Account Type:** Storm Restoration Professional")
+    st.write("**Status:** Active ✅")
