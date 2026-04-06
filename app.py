@@ -23,16 +23,6 @@ st.markdown(f"""
     }}
     .main-logo {{ width: 100px; border-radius: 8px; }}
 
-    /* Carrusel de historias */
-    .story-container {{
-        display: flex;
-        overflow-x: auto;
-        gap: 15px;
-        padding-bottom: 10px;
-        scrollbar-width: none;
-    }}
-    .story-container::-webkit-scrollbar {{ display: none; }}
-
     .owner-label {{
         font-size: 12px;
         font-weight: bold;
@@ -53,20 +43,21 @@ st.markdown(f"""
     """, unsafe_allow_html=True)
 
 # --- VENTANA EMERGENTE (POP-UP) ---
+# Aquí es donde vive TODA la información del cliente ahora
 @st.dialog("Property Details")
 def show_owner_details(person):
     st.markdown(f"""
-        <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1);">
-            <p style="font-size: 18px; margin-bottom: 5px;"><b>Owner:</b> {person['name']}</p>
-            <p style="margin: 0;"><b>Address:</b> {person['address']}</p>
-            <p style="margin: 0;"><b>Phone:</b> {person['phone']}</p>
-            <p style="margin: 0;"><b>Roof Size:</b> {person['sqft']} SqFt</p>
+        <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1); color: white;">
+            <p style="font-size: 18px; margin-bottom: 10px;"><b>Owner:</b> {person['name']}</p>
+            <p style="margin: 5px 0;"><b>Address:</b> {person['address']}</p>
+            <p style="margin: 5px 0;"><b>Phone:</b> {person['phone']}</p>
+            <p style="margin: 5px 0;"><b>Roof Size:</b> {person['sqft']} SqFt</p>
         </div>
     """, unsafe_allow_html=True)
     
     st.write(" ")
     
-    # Lógica del botón GET (Envío de correo)
+    # Lógica del botón GET
     subject = f"CLAIM LEAD: {person['name']}"
     body = f"I want to claim this lead:%0D%0AOwner: {person['name']}%0D%0AAddress: {person['address']}%0D%0ASize: {person['sqft']} SqFt"
     mail_url = f"mailto:admin@roofaid.com?subject={subject}&body={body}"
@@ -82,8 +73,7 @@ def show_owner_details(person):
 # 1. Logo
 st.markdown(f'<div class="logo-container"><img src="{LOGO_URL}" class="main-logo"></div>', unsafe_allow_html=True)
 
-# --- BASE DE DATOS (Aquí es donde entrarán tus datos de Google Sheets) ---
-# Si la lista está vacía [], no se mostrarán historias.
+# --- BASE DE DATOS TEMPORAL ---
 customers = [
     {"id": 1, "type": "appointment", "name": "John Doe", "address": "123 Sky Lane", "phone": "555-0101", "sqft": "2,400"},
     {"id": 2, "type": "appointment", "name": "Robert Ross", "address": "789 Pine Rd", "phone": "555-0303", "sqft": "3,100"},
@@ -92,7 +82,7 @@ customers = [
     {"id": 5, "type": "follow_up", "name": "Sarah Connor", "address": "202 Term St", "phone": "555-0505", "sqft": "2,200"},
 ]
 
-# Ordenar prioridad: Appointments (verdes) primero
+# Ordenar prioridad: Appointments primero
 sorted_customers = sorted(customers, key=lambda x: x['type'] != 'appointment')
 
 # --- NAVEGACIÓN ---
@@ -102,13 +92,25 @@ with tab_home:
     if sorted_customers:
         st.write("### Potential Customers")
         
-        # Carrusel horizontal con columnas dinámicas
-        cols = st.columns(len(sorted_customers) if len(sorted_customers) > 0 else 1)
+        # Carrusel de historias
+        cols = st.columns(len(sorted_customers))
         
         for i, person in enumerate(sorted_customers):
             with cols[i]:
-                # Color del texto según tipo
                 label_color = "#28A745" if person['type'] == "appointment" else "#F57C00"
                 
-                # Círculo interactivo (Botón que dispara el Pop-up)
-                if st.button("🏠", key=f"btn
+                # Al hacer clic aquí, se abre el Pop-up y nada más
+                if st.button("🏠", key=f"btn_{person['id']}"):
+                    show_owner_details(person)
+                
+                st.markdown(f'<div class="owner-label" style="color:{label_color}">Owner</div>', unsafe_allow_html=True)
+    
+    st.divider()
+    
+    # El Feed ahora aparece justo después de las historias
+    st.write("### Feed")
+    st.video("https://www.w3schools.com/html/mov_bbb.mp4")
+    st.write("**Storm Intel:** Hail activity detected in NWA. Check potential claims.")
+
+with tab_messages:
+    st.chat_message("assistant").write("Hi, this is Riley from ROOF-AID. Ready to claim some leads?")
