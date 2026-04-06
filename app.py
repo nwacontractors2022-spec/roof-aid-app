@@ -1,16 +1,16 @@
 import streamlit as st
 
-# Configuración de página para móviles
+# Configuración de página
 st.set_page_config(page_title="Roof-Aid App", layout="centered")
 
-# --- RUTA DEL LOGO (Basado en el archivo subido a GitHub) ---
-# Se utiliza el nombre exacto del archivo que mencionaste
-LOGO_URL = "WhatsApp Image 2026-02-21 at 9.25.44 PM.jpeg"
+# --- RUTA DEL LOGO (Basado en tu repositorio) ---
+# Los navegadores necesitan %20 en lugar de espacios
+LOGO_URL = "https://raw.githubusercontent.com/nwacontractors2022-spec/roof-aid-app/main/WhatsApp%20Image%202026-02-21%20at%209.25.44%20PM.jpeg".replace(" ", "%20")
 
 # Icono de casa para las historias
 HOUSE_ICON_URL = "https://cdn-icons-png.flaticon.com/512/619/619153.png"
 
-# --- CSS PERSONALIZADO (Estilo Instagram Premium) ---
+# --- CSS PERSONALIZADO ---
 st.markdown(f"""
     <style>
     .stApp {{
@@ -18,28 +18,31 @@ st.markdown(f"""
         color: white;
     }}
     
-    /* Contenedor del Logo en la parte superior derecha */
+    /* Contenedor del Logo ajustado arriba a la derecha */
     .logo-container {{
         display: flex;
         justify-content: flex-end;
-        margin-top: -60px;
-        margin-bottom: 20px;
+        margin-top: -70px;
+        margin-bottom: 30px;
     }}
     .main-logo {{
-        width: 110px;
-        border-radius: 10px;
+        width: 100px;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.3);
     }}
     
     h1, h2, h3, h4, h5, h6, p, label {{
         color: white !important;
     }}
     
-    /* Estilo de los círculos de historias */
+    /* Centrado total de Historias */
     .story-wrapper {{
         display: flex;
         flex-direction: column;
         align-items: center;
+        justify-content: center;
         text-align: center;
+        margin-bottom: 20px;
     }}
 
     .story-circle {{
@@ -51,23 +54,27 @@ st.markdown(f"""
         display: flex;
         justify-content: center;
         align-items: center;
-        margin-bottom: 5px;
     }}
     
-    .orange-border {{ border: 4px solid #F57C00; box-shadow: 0 0 10px rgba(245, 124, 0, 0.3); }} 
-    .green-border {{ border: 4px solid #28A745; box-shadow: 0 0 10px rgba(40, 167, 69, 0.3); }}
+    .orange-border {{ border: 4px solid #F57C00; }} 
+    .green-border {{ border: 4px solid #28A745; }}
     
-    .house-icon {{ width: 45px; }}
+    .house-icon {{ 
+        width: 45px; 
+        height: 45px; 
+        object-fit: contain; 
+    }}
 
-    /* Texto centrado debajo del círculo */
+    /* Estilo del texto Owner centrado */
     .owner-label {{
-        font-size: 12px;
-        font-weight: 500;
-        margin-top: 2px;
-        white-space: nowrap;
+        font-size: 13px;
+        font-weight: 600;
+        margin-top: 8px;
+        color: white;
+        text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
     }}
 
-    /* Ocultar botones de navegación nativos si fuera necesario y ajustar tabs */
+    /* Barra de navegación inferior */
     .stTabs [data-baseweb="tab-list"] {{
         position: fixed;
         bottom: 0;
@@ -80,24 +87,22 @@ st.markdown(f"""
     </style>
     """, unsafe_allow_html=True)
 
-# 1. Inyección del Logo de la empresa
+# 1. Mostrar Logo
 st.markdown(f'<div class="logo-container"><img src="{LOGO_URL}" class="main-logo"></div>', unsafe_allow_html=True)
 
-# --- NAVEGACIÓN INFERIOR ---
+# --- NAVEGACIÓN ---
 tab_home, tab_messages, tab_profile = st.tabs(["🏠 Feed", "📩 Messages", "👤 Profile"])
 
 with tab_home:
     st.write("### Potential Customers")
     
-    # Creamos 4 columnas para las historias
+    # Historias en 4 columnas
     cols = st.columns(4)
-    
-    # Datos de ejemplo (Luego esto vendrá de tu base de datos)
     stories = [
-        {"name": "Owner", "border": "orange-border"},
-        {"name": "Owner", "border": "green-border"},
-        {"name": "Owner", "border": "orange-border"},
-        {"name": "Owner", "border": "green-border"}
+        {"border": "orange-border"},
+        {"border": "green-border"},
+        {"border": "orange-border"},
+        {"border": "green-border"}
     ]
     
     for i, story in enumerate(stories):
@@ -107,23 +112,15 @@ with tab_home:
                     <div class="story-circle {story['border']}">
                         <img src="{HOUSE_ICON_URL}" class="house-icon">
                     </div>
-                    <div class="owner-label">{story['name']}</div>
+                    <div class="owner-label">Owner</div>
                 </div>
             """, unsafe_allow_html=True)
 
-    st.markdown("<br>", unsafe_allow_html=True)
     st.divider()
-    
     st.write("### Feed")
-    # Video del feed (reemplazar link por el real de tu avatar de IA después)
     st.video("https://www.w3schools.com/html/mov_bbb.mp4") 
-    st.write("**Storm Intel:** Hail activity detected in your area. Check potential claims below.")
+    st.write("**Storm Intel:** Hail activity detected. Potential claims identified.")
 
 with tab_messages:
     st.write("### Messages")
     st.chat_message("assistant").write("Hi, this is Riley from ROOF-AID. Hope you're doing today!")
-
-with tab_profile:
-    st.write("### Profile")
-    st.write("**Account Type:** Storm Restoration Professional")
-    st.write("**Status:** Active ✅")
