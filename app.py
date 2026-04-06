@@ -1,119 +1,100 @@
 import streamlit as st
 import streamlit.components.v1 as components
+import pandas as pd
+import os
 
 # 1. Configuración de página
 st.set_page_config(page_title="Roof-Aid Tech", layout="centered")
 
-# --- RUTAS DE ARCHIVOS (Ruta directa a tu GitHub) ---
-# Al haber subido el archivo, esta URL es la que lo hará aparecer
+# --- CONEXIÓN A GOOGLE SHEETS ---
+@st.cache_data(ttl=300)
+def load_data(url):
+    try:
+        csv_url = url.replace("/edit#gid=", "/export?format=csv&gid=")
+        return pd.read_csv(csv_url)
+    except:
+        return pd.DataFrame()
+
+# Cargamos datos de clientes
+try:
+    sheet_url = st.secrets["gsheet_url"]
+    df = load_data(sheet_url)
+    customers = df.to_dict('records')
+except:
+    customers = []
+
+# --- CONFIGURACIÓN VISUAL (Azul Rey) ---
 LOGO_URL = "https://raw.githubusercontent.com/nwacontractors2022-spec/roof-aid-app/main/Gemini_Generated_Image_i6ft8ji6ft8ji6ft.png"
 HOUSE_ICON_URL = "https://cdn-icons-png.flaticon.com/512/619/619153.png"
 
-# --- CSS GLOBAL (AZUL REY Y ESTILO INSTAGRAM) ---
 st.markdown(f"""
     <style>
-    /* Fondo Azul Rey en toda la App */
-    .stApp {{
-        background-color: #0047AB !important;
-        color: white;
-    }}
-    
-    /* Logo Central Superior */
-    .ig-header {{
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        padding: 15px 0;
-        width: 100%;
-        background-color: #0047AB;
-        border-bottom: 1px solid rgba(255,255,255,0.1);
-        margin-bottom: 10px;
-    }}
-    
-    .main-logo {{
-        height: 85px; /* Logo más predominante */
-        width: auto;
-    }}
-
-    /* Tabs Inferiores Fixed */
-    .stTabs [data-baseweb="tab-list"] {{
-        position: fixed;
-        bottom: 0;
-        background-color: #003380;
-        width: 100%;
-        z-index: 1000;
-        justify-content: center;
-        border-top: 1px solid rgba(255,255,255,0.1);
-        padding-bottom: 10px;
-    }}
-    
-    button[data-baseweb="tab"] p {{
-        color: white !important;
-        font-weight: bold;
-        font-size: 14px;
-    }}
-
-    /* Ocultar elementos de Streamlit para limpieza total */
-    #MainMenu {{visibility: hidden;}}
-    footer {{visibility: hidden;}}
-    header {{visibility: hidden;}}
-    
-    /* Ajuste de márgenes de bloques */
-    .block-container {{
-        padding-top: 1rem;
-    }}
+    .stApp {{ background-color: #0047AB !important; color: white; }}
+    .ig-header {{ display: flex; justify-content: center; padding: 15px 0; background-color: #0047AB; border-bottom: 1px solid rgba(255,255,255,0.1); }}
+    .main-logo {{ height: 80px; width: auto; }}
+    .stTabs [data-baseweb="tab-list"] {{ position: fixed; bottom: 0; background-color: #003380; width: 100%; z-index: 1000; justify-content: center; padding-bottom: 10px; }}
+    button[data-baseweb="tab"] p {{ color: white !important; font-weight: bold; }}
+    #MainMenu, footer, header {{visibility: hidden;}}
     </style>
     """, unsafe_allow_html=True)
 
-# 2. RENDERIZADO DEL LOGO CENTRAL
 st.markdown(f'<div class="ig-header"><img src="{LOGO_URL}" class="main-logo"></div>', unsafe_allow_html=True)
 
 # --- NAVEGACIÓN ---
 tab_home, tab_messages, tab_profile = st.tabs(["🏠 Feed", "📩 Messages", "👤 Profile"])
 
 with tab_home:
-    st.markdown("<h4 style='color:white; margin-left: 10px;'>Potential Customers</h4>", unsafe_allow_html=True)
-    
-    # Datos simulados de clientes
-    customers = [
-        {"type": "appointment"},
-        {"type": "appointment"},
-        {"type": "follow_up"},
-        {"type": "follow_up"},
-        {"type": "follow_up"}
-    ]
-
-    # 3. COMPONENTE DE HISTORIAS (ENCAPSULADO PARA EVITAR ERROR DE TEXTO)
-    stories_content = ""
-    for person in customers:
-        # Colores de borde: Verde para cita, Naranja para seguimiento
-        border_color = "#28A745" if person['type'] == "appointment" else "#FF8C00"
-        stories_content += f'''
-            <div style="display: flex; flex-direction: column; align-items: center; min-width: 100px;">
-                <div style="width: 85px; height: 85px; border-radius: 50%; background: white; display: flex; justify-content: center; align-items: center; border: 4px solid {border_color}; box-shadow: 0 4px 8px rgba(0,0,0,0.3);">
-                    <img src="{HOUSE_ICON_URL}" style="width: 55px; height: 55px;">
+    # SECCIÓN: Potential Customers (Historias)
+    st.markdown("<h4 style='margin-left: 10px;'>Potential Customers</h4>", unsafe_allow_html=True)
+    if customers:
+        stories_html = ""
+        for p in customers:
+            color = "#28A745" if str(p.get('type', '')).lower() == "appointment" else "#FF8C00"
+            full_name = f"{p.get('nombre', '')} {p.get('apellido', '')}".strip()
+            stories_html += f'''
+                <div style="display: flex; flex-direction: column; align-items: center; min-width: 100px;">
+                    <div style="width: 85px; height: 85px; border-radius: 50%; background: white; display: flex; justify-content: center; align-items: center; border: 4px solid {color}; box-shadow: 0 4px 8px rgba(0,0,0,0.2);">
+                        <img src="{HOUSE_ICON_URL}" style="width: 55px; height: 55px;">
+                    </div>
+                    <div style="font-size: 11px; color: white; margin-top: 8px; font-weight: 600; text-align: center; width: 95px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                        {full_name if full_name else 'Owner'}
+                    </div>
                 </div>
-                <div style="font-size: 13px; color: white; margin-top: 10px; font-weight: 600; font-family: sans-serif; text-align: center;">Owner</div>
-            </div>
-        '''
-
-    # Renderizado seguro mediante Iframe para evitar errores de interpretación
-    components.html(f"""
-        <div style="display: flex; flex-direction: row; overflow-x: auto; gap: 20px; padding: 10px; scrollbar-width: none; -ms-overflow-style: none;">
-            {stories_content}
-        </div>
-        <style>
-            div::-webkit-scrollbar {{ display: none; }}
-            body {{ margin: 0; padding: 0; background-color: transparent; overflow: hidden; }}
-        </style>
-    """, height=165)
+            '''
+        components.html(f'<div style="display: flex; gap: 15px; overflow-x: auto; padding: 10px; scrollbar-width: none;">{stories_html}</div>', height=165)
 
     st.markdown("<hr style='opacity:0.2; margin: 10px 0;'>", unsafe_allow_html=True)
     
-    # 4. SECCIÓN FEED
-    st.markdown("<h4 style='color:white; margin-left: 10px;'>Feed</h4>", unsafe_allow_html=True)
-    st.video("https://www.w3schools.com/html/mov_bbb.mp4")
-    st.write("**Storm Intel:** Actividad de granizo detectada en el área de NWA. Revisa tus leads.")
+    # SECCIÓN: Feed Dinámico (Content Media)
+    st.markdown("<h4 style='margin-left: 10px;'>Roofing Feed</h4>", unsafe_allow_html=True)
+    
+    # Ruta local a la carpeta
+    MEDIA_DIR = "content media"
+    
+    if os.path.exists(MEDIA_DIR):
+        # Listamos archivos omitiendo el ancla 'keephub'
+        files = sorted([f for f in os.listdir(MEDIA_DIR) if f != "keephub"])
+        
+        if files:
+            for file in files:
+                file_path = os.path.join(MEDIA_DIR, file)
+                # Mostramos videos (.mov o .mp4)
+                if file.lower().endswith(('.mp4', '.mov', '.avi')):
+                    st.video(file_path)
+                    st.markdown(f"<p style='text-align:center; font-size:12px; opacity:0.7;'>{file}</p>", unsafe_allow_html=True)
+                # Mostramos imágenes
+                elif file.lower().endswith(('.png', '.jpg', '.jpeg')):
+                    st.image(file_path, use_column_width=True)
+                st.markdown("<hr style='opacity:0.1;'>", unsafe_allow_html=True)
+        else:
+            st.info("No se encontraron archivos en 'content media'.")
+    else:
+        st.error(f"No se detectó la carpeta '{MEDIA_DIR}'.")
 
 with tab_messages:
-    st.chat_message("assistant").write("Hi, this is Riley from ROOF-AID. Ready to claim some leads?")
+    st.chat_message("assistant").write("Hi, this is Riley from ROOF-AID. hope you're doing today!")
+
+with tab_profile:
+    st.subheader("System Status")
+    st.write(f"📁 Media Folder: `{MEDIA_DIR}`")
+    st.write(f"👥 Leads in Sheet: {len(customers)}")
