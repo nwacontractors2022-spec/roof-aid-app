@@ -1,55 +1,54 @@
 import streamlit as st
 
-# Configuración de página para móviles
+# 1. Configuración de página
 st.set_page_config(page_title="Roof-Aid Tech", layout="centered")
 
 # --- RUTAS DE ARCHIVOS ---
-# Usando el nombre exacto que mencionaste
 LOGO_URL = "Gemini_Generated_Image_i6ft8ji6ft8ji6ft.png"
 HOUSE_ICON_URL = "https://cdn-icons-png.flaticon.com/512/619/619153.png"
 
-# --- CSS PARA EL LOOK DE INSTAGRAM ---
+# --- CSS PARA EL LOOK DE INSTAGRAM (AZUL REY) ---
 st.markdown(f"""
     <style>
-    /* 1. Fondo Azul Rey Predominante */
+    /* Fondo Azul Rey Total */
     .stApp {{
-        background: #0047AB; /* Azul Rey */
+        background-color: #0047AB !important;
         color: white;
     }}
     
-    /* 2. Cabecera Fija del Logo Central (Tipo IG) */
+    /* Cabecera Fija con Logo Central */
     .ig-header {{
         position: fixed;
         top: 0;
         left: 0;
         width: 100%;
-        height: 110px;
-        background: #0047AB;
+        height: 80px;
+        background-color: #0047AB;
         display: flex;
         justify-content: center;
         align-items: center;
-        z-index: 1000;
-        border-bottom: 1px solid rgba(255,255,255,0.1);
+        z-index: 9999;
+        border-bottom: 1px solid rgba(255,255,255,0.2);
     }}
     
     .main-logo {{
-        height: 75px; 
+        height: 55px;
         width: auto;
     }}
     
-    /* 3. Espaciado del contenido para el header fijo */
-    .stMainBlockContainer {{
-        padding-top: 130px !important;
+    /* Espaciado para que el contenido no quede bajo el logo */
+    .main-content {{
+        margin-top: 90px;
     }}
 
-    /* 4. SECCIÓN STORIES (Circulares y 30% más grandes) */
+    /* Contenedor de Stories */
     .story-scroll-container {{
         display: flex;
+        flex-direction: row;
         overflow-x: auto;
         gap: 25px;
-        padding: 10px 0px 20px 0px;
+        padding: 15px 5px;
         scrollbar-width: none;
-        justify-content: flex-start;
     }}
     .story-scroll-container::-webkit-scrollbar {{ display: none; }}
 
@@ -57,98 +56,105 @@ st.markdown(f"""
         display: flex;
         flex-direction: column;
         align-items: center;
-        min-width: 95px; /* Ajuste para el tamaño 30% mayor */
+        min-width: 90px;
     }}
 
-    /* Círculo de historia (85px es ~30% más que el estándar de 65px) */
+    /* Círculos 30% más grandes */
     .story-circle {{
         width: 85px;
         height: 85px;
         border-radius: 50%;
-        background: white;
+        background-color: white;
         display: flex;
         justify-content: center;
         align-items: center;
-        position: relative;
-        border: 3px solid #ffffff;
+        border: 4px solid white;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.2);
     }}
 
-    /* Bordes de color según tipo (Vivo) */
-    .border-appointment {{ border: 4px solid #28A745 !important; }} /* Verde */
-    .border-followup {{ border: 4px solid #FF8C00 !important; }}    /* Naranja */
+    /* Bordes de estado */
+    .border-appointment {{ border-color: #28A745 !important; }}
+    .border-followup {{ border-color: #FF8C00 !important; }}
 
     .house-icon-img {{
         width: 50px;
         height: 50px;
     }}
 
-    /* Texto Owner centrado debajo del círculo */
+    /* Nombre Owner centrado debajo */
     .owner-label {{
         font-size: 13px;
-        font-weight: 500;
-        color: white;
-        margin-top: 8px;
+        color: white !important;
+        margin-top: 10px;
         text-align: center;
+        font-weight: 600;
         width: 100%;
     }}
 
-    /* 5. Tabs Inferiores Fijos */
+    /* Tabs Inferiores */
     .stTabs [data-baseweb="tab-list"] {{
         position: fixed;
         bottom: 0;
-        background: #003380;
-        z-index: 100;
+        background-color: #003380;
         width: 100%;
+        z-index: 1000;
         justify-content: center;
-        padding-bottom: 10px;
+        border-top: 1px solid rgba(255,255,255,0.1);
+    }}
+    
+    /* Forzar color de texto en Tabs */
+    button[data-baseweb="tab"] p {{
+        color: white !important;
     }}
     </style>
     """, unsafe_allow_html=True)
 
-# 1. Cabecera con Logo Central
+# 2. Header con Logo
 st.markdown(f'<div class="ig-header"><img src="{LOGO_URL}" class="main-logo"></div>', unsafe_allow_html=True)
 
-# --- BASE DE DATOS TEMPORAL ---
-customers = [
-    {"id": 1, "type": "appointment", "name": "John Doe"},
-    {"id": 2, "type": "appointment", "name": "Robert Ross"},
-    {"id": 3, "type": "follow_up", "name": "Jane Smith"},
-    {"id": 4, "type": "follow_up", "name": "Mike Myers"},
-    {"id": 5, "type": "follow_up", "name": "Sarah Connor"},
-]
-
-# Ordenar prioridad
-sorted_customers = sorted(customers, key=lambda x: x['type'] != 'appointment')
+# 3. Contenedor de contenido
+st.markdown('<div class="main-content">', unsafe_allow_html=True)
 
 # --- NAVEGACIÓN ---
 tab_home, tab_messages, tab_profile = st.tabs(["🏠 Feed", "📩 Messages", "👤 Profile"])
 
 with tab_home:
-    # Renderizado de Historias Estilo Instagram
-    st.write("### Potential Customers")
+    st.markdown("<h3 style='color:white;'>Potential Customers</h3>", unsafe_allow_html=True)
     
-    # Construcción del HTML de stories
+    # Datos de ejemplo
+    customers = [
+        {"id": 1, "type": "appointment"},
+        {"id": 2, "type": "appointment"},
+        {"id": 3, "type": "follow_up"},
+        {"id": 4, "type": "follow_up"},
+        {"id": 5, "type": "follow_up"},
+    ]
+
+    # Construcción robusta del HTML de Stories
     stories_html = '<div class="story-scroll-container">'
-    for person in sorted_customers:
+    for person in customers:
         border_class = "border-appointment" if person['type'] == "appointment" else "border-followup"
         stories_html += f'''
             <div class="story-item">
                 <div class="story-circle {border_class}">
                     <img src="{HOUSE_ICON_URL}" class="house-icon-img">
                 </div>
-                <div class="owner-label">Owner</div>
+                <p class="owner-label">Owner</p>
             </div>
         '''
     stories_html += '</div>'
     
+    # Renderizado final
     st.markdown(stories_html, unsafe_allow_html=True)
 
-    st.divider()
+    st.markdown("<hr style='opacity:0.2;'>", unsafe_allow_html=True)
     
-    # Feed de Video
-    st.write("### Feed")
+    # Sección Feed
+    st.markdown("<h3 style='color:white;'>Feed</h3>", unsafe_allow_html=True)
     st.video("https://www.w3schools.com/html/mov_bbb.mp4")
-    st.write("**Storm Intel:** Hail activity detected in NWA. Check potential claims.")
+    st.write("**Storm Intel:** Hail activity detected in NWA.")
 
 with tab_messages:
     st.chat_message("assistant").write("Hi, this is Riley from ROOF-AID. Ready to claim some leads?")
+
+st.markdown('</div>', unsafe_allow_html=True)
